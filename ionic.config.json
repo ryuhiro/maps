@@ -1,0 +1,8 @@
+{
+  "name": "maps",
+  "integrations": {
+    "cordova": {}
+  },
+  "type": "ionic-angular",
+  "id": "5b23108a"
+}
