@@ -1,6 +1,7 @@
 import { Component, NgZone, ViewChild, ElementRef } from '@angular/core';
-import { Geolocation } from '@ionic-native/geolocation/ngx';
-import { NavController, LoadingController } from 'ionic-angular';
+import { Geolocation, GeolocationOptions, Geoposition } from '@ionic-native/geolocation';
+import { NavController, LoadingController, ModalController } from 'ionic-angular';
+import { RumahSakitPage } from '../rumah-sakit/rumah-sakit';
 
 declare var google: any;
 
@@ -20,10 +21,15 @@ export class HomePage {
   geocoder: any
   autocompleteItems: any;
   loading: any;
+  lat: any;
+  lng: any;
+  options: GeolocationOptions;
+  currPos: Geoposition;
+  modal: any;
 
-  constructor(public navCtrl: NavController, private geolocation: Geolocation, public loadingCtrl: LoadingController, private zone: NgZone) {
+  constructor(public navCtrl: NavController, private geolocation: Geolocation, public loadingCtrl: LoadingController, private zone: NgZone, public modalCtrl: ModalController) {
     this.geocoder = new google.maps.Geocoder;
-    let elem = document.createElement("div")
+    let elem = document.createElement("div");
     this.GooglePlaces = new google.maps.places.PlacesService(elem);
     this.GoogleAutocomplete = new google.maps.places.AutocompleteService();
     this.autocomplete = {
@@ -35,42 +41,19 @@ export class HomePage {
   }
 
   ionViewDidLoad(){
-    this.showMap()
+    this.showMap();
   }
 
   showMap() {
     // let infoWindow = new google.maps.InfoWindow({map: map});
     //Set latitude and longitude of some place
-    var centers = { lat: -6.2556254, lng: 106.8612565 };
+    var centers = { lat: -6.296437, lng: 106.855688 };
     this.map = new google.maps.Map(document.getElementById('map'), {
       center: centers,
       zoom: 15
     });
 
     this.addMarker(centers, this.map);
-  }
-
-  tryGeolocation(){
-    this.loading.present();
-    this.clearMarkers();//remove previous markers
-
-    this.geolocation.getCurrentPosition().then((resp) => {
-      console.log(resp)
-      // let pos = {
-      //   lat: resp.coords.latitude,
-      //   lng: resp.coords.longitude
-      // };
-      // let marker = new google.maps.Marker({
-      //   position: pos,
-      //   map: this.map
-      // });
-      // this.markers.push(marker);
-      // this.map.setCenter(pos);
-      this.loading.dismiss();
-    }).catch((error) => {
-      console.log('Error getting location', error);
-      this.loading.dismiss();
-    });
   }
 
   updateSearchResults(){
@@ -91,19 +74,19 @@ export class HomePage {
     });
   }
 
-  selectSearchResult(item){
-    this.clearMarkers();
+  selectSearchResult(item) {
+    // this.clearMarkers();
     this.autocompleteItems = [];
+    // console.log(item)
 
     this.geocoder.geocode({'placeId': item.place_id}, (results, status) => {
-      if(status === 'OK' && results[0]){
-        // let position = {
-        //     lat: results[0].geometry.location.lat,
-        //     lng: results[0].geometry.location.lng
-        // };
-        let marker = new google.maps.Marker({
-          position: results[0].geometry.location,
-          map: this.map
+      if (status == google.maps.places.PlacesServiceStatus.OK) {
+        var marker = new google.maps.Marker({
+          map: this.map,
+          place: {
+            placeId: results[0].place_id,
+            location: results[0].geometry.location
+          }
         });
         this.markers.push(marker);
         this.map.setCenter(results[0].geometry.location);
@@ -112,6 +95,7 @@ export class HomePage {
   }
 
   addMarker(position,map) {
+    this.clearMarkers();//remove previous markers
     return new google.maps.Marker({
       position,
       map
@@ -124,6 +108,56 @@ export class HomePage {
       this.markers[i].setMap(null);
     }
     this.markers = [];
+  }
+
+  tryGeolocation(){
+    this.clearMarkers();//remove previous markers
+    this.presentLoading();
+
+    this.options = {
+      enableHighAccuracy: true
+    };
+
+    this.geolocation.getCurrentPosition(this.options).then((resp) => {
+      let pos = {
+        lat: resp.coords.latitude,
+        lng: resp.coords.longitude
+      };
+      let marker = new google.maps.Marker({
+        position: pos,
+        map: this.map
+      });
+      this.lat = resp.coords.latitude;
+      this.lng = resp.coords.longitude;
+      console.log(pos);
+      this.markers.push(marker);
+      this.map.setCenter(pos);
+      this.dismissLoading();
+    }).catch((error) => {
+      console.log('Error getting location', error);
+      this.dismissLoading();
+    });
+  }
+
+  tryNear() {
+    var position = {
+      lat: this.lat,
+      lng: this.lng
+    };
+    this.navCtrl.push(RumahSakitPage, { location: position });
+  }
+
+  presentLoading() {
+    this.loading = this.loadingCtrl.create({
+      content: 'Please Wait...'
+    });
+    this.loading.present();
+  }
+
+  dismissLoading() {
+    if (this.loading) {
+      this.loading.dismiss();
+    }
   }
 
 }

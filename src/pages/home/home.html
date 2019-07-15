@@ -1,11 +1,11 @@
 <ion-header>
-  <ion-navbar color="primary">
+  <ion-navbar color="dark">
     <button ion-button menuToggle>
       <ion-icon name="menu"></ion-icon>
     </button>
     <ion-title>Home</ion-title>
   </ion-navbar>
-  <ion-toolbar color="primary">
+  <ion-toolbar color="dark">
     <ion-searchbar [(ngModel)]="autocomplete.input" (ionInput)="updateSearchResults()" placeholder="Search for a place"></ion-searchbar>
   </ion-toolbar>
 </ion-header>
@@ -21,5 +21,12 @@
 </ion-content>
 
 <ion-footer>
-  <button class="geolocation-btn" ion-button full (click)="tryGeolocation()"> Try Geolocation </button>
+  <ion-row>
+    <ion-col col-6 col-md-6>
+      <button class="geolocation-btn no-margin" ion-button full (click)="tryGeolocation()"> Try Geolocation </button>
+    </ion-col>
+    <ion-col col-6 col-md-6>
+      <button class="geolocation-btn no-margin" ion-button full (click)="tryNear()"> Try NearBy </button>
+    </ion-col>
+  </ion-row>
 </ion-footer>
